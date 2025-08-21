@@ -72,13 +72,17 @@ This project is set up as a monorepo with both frontend and backend. For deploym
    - Select "Database"
    - Choose "PostgreSQL"
 
-4. Configure environment variables:
-   In the Railway dashboard, go to your project settings and add these environment variables:
+4. Configure the backend service:
+   - Click on the backend service (not the database)
+   - Go to "Settings" tab
+   - Set "Root Directory" to `/backend`
+
+5. Configure environment variables:
+   In the Railway dashboard, go to your backend service settings and add these environment variables:
    - `NODE_ENV` - Set to "production"
    - `FRONTEND_URL` - Your frontend URL (for CORS, optional if serving frontend from backend)
-   - `DATABASE_URL` - This will be automatically set by Railway when you add the PostgreSQL database
 
-5. Deploy:
+6. Deploy:
    Railway will automatically deploy your application. The deployment URL will be available in the dashboard.
 
 ### Environment Variables for Deployment

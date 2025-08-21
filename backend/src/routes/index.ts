@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { db } from "../services/database";
+import { db } from "../services/databaseManager";
 import { statsService } from "../services/statsService";
 import { createPlayerSchema, createGameSchema } from "../validation/schema";
 import { WONDERS } from "../data/wonders";
@@ -19,23 +19,23 @@ router.get("/wonders", (req: Request, res: Response) => {
 });
 
 // Player routes
-router.get("/players", (req: Request, res: Response) => {
+router.get("/players", async (req: Request, res: Response) => {
   try {
-    const players = db.getAllPlayers();
+    const players = await db.getAllPlayers();
     res.json(players);
   } catch (error: any) {
     res.status(500).json({ error: error.message || "Failed to fetch players" });
   }
 });
 
-router.post("/players", (req: Request, res: Response) => {
+router.post("/players", async (req: Request, res: Response) => {
   try {
     const validatedData = createPlayerSchema.parse(
       req.body
     ) as CreatePlayerRequest;
 
     // Check if player name already exists
-    const existingPlayers = db.getAllPlayers();
+    const existingPlayers = await db.getAllPlayers();
     const existingPlayer = existingPlayers.find(
       (p) => p.name.toLowerCase() === validatedData.name.toLowerCase()
     );
@@ -50,18 +50,18 @@ router.post("/players", (req: Request, res: Response) => {
       createdAt: new Date(),
     };
 
-    const createdPlayer = db.createPlayer(newPlayer);
+    const createdPlayer = await db.createPlayer(newPlayer);
     res.status(201).json(createdPlayer);
   } catch (error: any) {
     res.status(400).json({ error: error.message || "Invalid input" });
   }
 });
 
-router.delete("/players/:id", (req: Request, res: Response) => {
+router.delete("/players/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const deleted = db.deletePlayer(id);
+    const deleted = await db.deletePlayer(id);
     if (!deleted) {
       return res.status(404).json({ error: "Player not found" });
     }
@@ -73,21 +73,21 @@ router.delete("/players/:id", (req: Request, res: Response) => {
 });
 
 // Game routes
-router.get("/games", (req: Request, res: Response) => {
+router.get("/games", async (req: Request, res: Response) => {
   try {
-    const games = db.getAllGames();
+    const games = await db.getAllGames();
     res.json(games);
   } catch (error: any) {
     res.status(500).json({ error: error.message || "Failed to fetch games" });
   }
 });
 
-router.post("/games", (req: Request, res: Response) => {
+router.post("/games", async (req: Request, res: Response) => {
   try {
     const validatedData = createGameSchema.parse(req.body) as CreateGameRequest;
 
     // Validate that all player IDs exist
-    const players = db.getAllPlayers();
+    const players = await db.getAllPlayers();
     const playerIds = players.map((p) => p.id);
 
     for (const gamePlayer of validatedData.players) {
@@ -100,26 +100,22 @@ router.post("/games", (req: Request, res: Response) => {
 
     const newGame: Game = {
       id: uuidv4(),
-      players: validatedData.players.map(p => ({
-        playerId: p.playerId,
-        wonderName: p.wonderName,
-        score: p.score
-      })),
+      players: validatedData.players,
       createdAt: new Date(),
     };
 
-    const createdGame = db.createGame(newGame);
+    const createdGame = await db.createGame(newGame);
     res.status(201).json(createdGame);
   } catch (error: any) {
     res.status(400).json({ error: error.message || "Invalid input" });
   }
 });
 
-router.delete("/games/:id", (req: Request, res: Response) => {
+router.delete("/games/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const deleted = db.deleteGame(id);
+    const deleted = await db.deleteGame(id);
     if (!deleted) {
       return res.status(404).json({ error: "Game not found" });
     }

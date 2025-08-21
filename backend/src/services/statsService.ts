@@ -1,11 +1,16 @@
-import { db } from "./database";
+import { db } from "./databaseManager";
 import { PlayerStats, WonderStats, GameHistory } from "../types";
-import { WONDERS, getWonderByName } from "../data/wonders";
+import { WONDERS } from "../data/wonders";
+
+// Helper function to get wonder by name
+function getWonderByName(name: string) {
+  return WONDERS.find(wonder => wonder.name === name);
+}
 
 export class StatsService {
   async calculatePlayerStats(): Promise<PlayerStats[]> {
-    const players = db.getAllPlayers();
-    const games = db.getAllGames();
+    const players = await db.getAllPlayers();
+    const games = await db.getAllGames();
 
     return players.map((player) => {
       const playerGames = games.filter((game) =>
@@ -82,7 +87,7 @@ export class StatsService {
   }
 
   async calculateWonderStats(): Promise<WonderStats[]> {
-    const games = db.getAllGames();
+    const games = await db.getAllGames();
 
     return WONDERS.map((wonder) => {
       const wonderGames = games.filter((game) =>
@@ -119,8 +124,8 @@ export class StatsService {
   }
 
   async getGameHistory(): Promise<GameHistory[]> {
-    const games = db.getAllGames();
-    const players = db.getAllPlayers();
+    const games = await db.getAllGames();
+    const players = await db.getAllPlayers();
 
     return games
       .map((game) => {

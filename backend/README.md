@@ -1,6 +1,6 @@
 # 7 Wonders Tracker Backend
 
-Backend API for tracking 7 Wonders games, built with Express.js, TypeScript, and a file-based database.
+Backend API for tracking 7 Wonders games, built with Express.js, TypeScript, and a file-based database (development) or PostgreSQL (production).
 
 ## Features
 - Player management (create, list, delete)
@@ -12,7 +12,7 @@ Backend API for tracking 7 Wonders games, built with Express.js, TypeScript, and
 ## Tech Stack
 - Node.js with TypeScript
 - Express.js
-- File-based JSON database
+- File-based JSON database (development) or PostgreSQL (production)
 - Zod for validation
 
 ## Setup
@@ -56,9 +56,9 @@ Backend API for tracking 7 Wonders games, built with Express.js, TypeScript, and
 - `GET /api/stats/wonders` - Get wonder statistics
 - `GET /api/games/history` - Get game history
 
-## Deployment
+## Monorepo Deployment
 
-### Deploy to Railway
+This project is set up as a monorepo with both frontend and backend. For deployment to Railway:
 
 1. Go to [railway.app](https://railway.app/) and create an account or sign in
 
@@ -67,15 +67,29 @@ Backend API for tracking 7 Wonders games, built with Express.js, TypeScript, and
    - Select "Deploy from GitHub repo"
    - Connect your GitHub account and select this repository
 
-3. Configure environment variables:
-   In the Railway dashboard, go to your project settings and add these environment variables:
-   - `FRONTEND_URL` - Your frontend URL (for CORS)
-   - `NODE_ENV` - Set to "production"
+3. Add a PostgreSQL database:
+   - In your Railway project, click "+ New"
+   - Select "Database"
+   - Choose "PostgreSQL"
 
-4. Deploy:
+4. Configure environment variables:
+   In the Railway dashboard, go to your project settings and add these environment variables:
+   - `NODE_ENV` - Set to "production"
+   - `FRONTEND_URL` - Your frontend URL (for CORS, optional if serving frontend from backend)
+   - `DATABASE_URL` - This will be automatically set by Railway when you add the PostgreSQL database
+
+5. Deploy:
    Railway will automatically deploy your application. The deployment URL will be available in the dashboard.
 
 ### Environment Variables for Deployment
 
 Make sure to set these environment variables in your deployment environment:
-- `FRONTEND_URL` - Your frontend URL (for CORS)
+- `NODE_ENV` - Should be set to "production" for Railway deployment
+- `FRONTEND_URL` - Your frontend URL (for CORS, optional if serving frontend from backend)
+- `DATABASE_URL` - Set automatically by Railway when you add PostgreSQL database
+
+## Development
+
+For local development, the backend uses a file-based database (`data.json`) for simplicity. In production, it uses PostgreSQL.
+
+The frontend is served by the backend in production but runs on a separate development server (Vite) during development.

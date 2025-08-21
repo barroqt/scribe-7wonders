@@ -1,6 +1,6 @@
 # 7 Wonders Tracker Backend
 
-Backend API for tracking 7 Wonders games, built with Express.js, TypeScript, and Supabase.
+Backend API for tracking 7 Wonders games, built with Express.js, TypeScript, and a file-based database.
 
 ## Features
 - Player management (create, list, delete)
@@ -12,7 +12,7 @@ Backend API for tracking 7 Wonders games, built with Express.js, TypeScript, and
 ## Tech Stack
 - Node.js with TypeScript
 - Express.js
-- Supabase (PostgreSQL database)
+- File-based JSON database
 - Zod for validation
 
 ## Setup
@@ -22,53 +22,13 @@ Backend API for tracking 7 Wonders games, built with Express.js, TypeScript, and
    npm install
    ```
 
-2. Create a Supabase project:
-   - Go to [supabase.com](https://supabase.com/) and create a new project
-   - Get your project URL and API key from the project settings
-
-3. Set up environment variables:
+2. Set up environment variables:
    ```bash
    cp .env.example .env
    ```
-   Then edit `.env` and add your Supabase credentials
+   Then edit `.env` to set your frontend URL if needed
 
-4. Create the required database tables in Supabase:
-   ```sql
-   -- Create players table
-   CREATE TABLE players (
-     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-     name VARCHAR(255) UNIQUE NOT NULL,
-     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-   );
-
-   -- Create games table
-   CREATE TABLE games (
-     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-   );
-
-   -- Create game_players table (junction table)
-   CREATE TABLE game_players (
-     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-     game_id UUID REFERENCES games(id) ON DELETE CASCADE,
-     player_id UUID REFERENCES players(id) ON DELETE CASCADE,
-     wonder_name VARCHAR(255) NOT NULL,
-     score INTEGER NOT NULL,
-     UNIQUE(game_id, player_id)
-   );
-
-   -- Enable Row Level Security (RLS) 
-   ALTER TABLE players ENABLE ROW LEVEL SECURITY;
-   ALTER TABLE games ENABLE ROW LEVEL SECURITY;
-   ALTER TABLE game_players ENABLE ROW LEVEL SECURITY;
-
-   -- Create policies to allow all operations (you can restrict these later)
-   CREATE POLICY "Enable all operations" ON players FOR ALL USING (true);
-   CREATE POLICY "Enable all operations" ON games FOR ALL USING (true);
-   CREATE POLICY "Enable all operations" ON game_players FOR ALL USING (true);
-   ```
-
-5. Run the development server:
+3. Run the development server:
    ```bash
    npm run dev
    ```
@@ -109,8 +69,6 @@ Backend API for tracking 7 Wonders games, built with Express.js, TypeScript, and
 
 3. Configure environment variables:
    In the Railway dashboard, go to your project settings and add these environment variables:
-   - `SUPABASE_URL` - Your Supabase project URL (e.g., https://your-project.supabase.co)
-   - `SUPABASE_KEY` - Your Supabase project API key
    - `FRONTEND_URL` - Your frontend URL (for CORS)
    - `NODE_ENV` - Set to "production"
 
@@ -120,6 +78,4 @@ Backend API for tracking 7 Wonders games, built with Express.js, TypeScript, and
 ### Environment Variables for Deployment
 
 Make sure to set these environment variables in your deployment environment:
-- `SUPABASE_URL` - Your Supabase project URL
-- `SUPABASE_KEY` - Your Supabase project API key
 - `FRONTEND_URL` - Your frontend URL (for CORS)

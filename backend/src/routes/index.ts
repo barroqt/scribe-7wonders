@@ -1,9 +1,10 @@
 import { Router, Request, Response } from "express";
-import { supabaseDb } from "../services/supabaseDatabase";
+import { db } from "../services/database";
 import { statsService } from "../services/statsService";
 import { createPlayerSchema, createGameSchema } from "../validation/schema";
 import { WONDERS } from "../data/wonders";
-import { CreatePlayerRequest, CreateGameRequest } from "../types";
+import { CreatePlayerRequest, CreateGameRequest, Player, Game } from "../types";
+import { v4 as uuidv4 } from "uuid";
 
 const router = Router();
 
@@ -18,23 +19,23 @@ router.get("/wonders", (req: Request, res: Response) => {
 });
 
 // Player routes
-router.get("/players", async (req: Request, res: Response) => {
+router.get("/players", (req: Request, res: Response) => {
   try {
-    const players = await supabaseDb.getAllPlayers();
+    const players = db.getAllPlayers();
     res.json(players);
   } catch (error: any) {
     res.status(500).json({ error: error.message || "Failed to fetch players" });
   }
 });
 
-router.post("/players", async (req: Request, res: Response) => {
+router.post("/players", (req: Request, res: Response) => {
   try {
     const validatedData = createPlayerSchema.parse(
       req.body
     ) as CreatePlayerRequest;
 
     // Check if player name already exists
-    const existingPlayers = await supabaseDb.getAllPlayers();
+    const existingPlayers = db.getAllPlayers();
     const existingPlayer = existingPlayers.find(
       (p) => p.name.toLowerCase() === validatedData.name.toLowerCase()
     );
@@ -43,49 +44,50 @@ router.post("/players", async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Player name already exists" });
     }
 
-    const createdPlayer = await supabaseDb.createPlayer({
+    const newPlayer: Player = {
+      id: uuidv4(),
       name: validatedData.name,
-    });
+      createdAt: new Date(),
+    };
+
+    const createdPlayer = db.createPlayer(newPlayer);
     res.status(201).json(createdPlayer);
   } catch (error: any) {
     res.status(400).json({ error: error.message || "Invalid input" });
   }
 });
 
-router.delete("/players/:id", async (req: Request, res: Response) => {
+router.delete("/players/:id", (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const deleted = await supabaseDb.deletePlayer(id);
+    const deleted = db.deletePlayer(id);
     if (!deleted) {
       return res.status(404).json({ error: "Player not found" });
     }
 
     res.status(204).send();
   } catch (error: any) {
-    if (error.message === "Cannot delete player who has played games. Delete games first.") {
-      return res.status(400).json({ error: error.message });
-    }
     res.status(500).json({ error: "Failed to delete player" });
   }
 });
 
 // Game routes
-router.get("/games", async (req: Request, res: Response) => {
+router.get("/games", (req: Request, res: Response) => {
   try {
-    const games = await supabaseDb.getAllGames();
+    const games = db.getAllGames();
     res.json(games);
   } catch (error: any) {
     res.status(500).json({ error: error.message || "Failed to fetch games" });
   }
 });
 
-router.post("/games", async (req: Request, res: Response) => {
+router.post("/games", (req: Request, res: Response) => {
   try {
     const validatedData = createGameSchema.parse(req.body) as CreateGameRequest;
 
     // Validate that all player IDs exist
-    const players = await supabaseDb.getAllPlayers();
+    const players = db.getAllPlayers();
     const playerIds = players.map((p) => p.id);
 
     for (const gamePlayer of validatedData.players) {
@@ -96,24 +98,28 @@ router.post("/games", async (req: Request, res: Response) => {
       }
     }
 
-    const createdGame = await supabaseDb.createGame({
+    const newGame: Game = {
+      id: uuidv4(),
       players: validatedData.players.map(p => ({
-        player_id: p.playerId,
-        wonder_name: p.wonderName,
+        playerId: p.playerId,
+        wonderName: p.wonderName,
         score: p.score
-      }))
-    });
+      })),
+      createdAt: new Date(),
+    };
+
+    const createdGame = db.createGame(newGame);
     res.status(201).json(createdGame);
   } catch (error: any) {
     res.status(400).json({ error: error.message || "Invalid input" });
   }
 });
 
-router.delete("/games/:id", async (req: Request, res: Response) => {
+router.delete("/games/:id", (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const deleted = await supabaseDb.deleteGame(id);
+    const deleted = db.deleteGame(id);
     if (!deleted) {
       return res.status(404).json({ error: "Game not found" });
     }

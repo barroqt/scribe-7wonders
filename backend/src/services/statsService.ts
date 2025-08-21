@@ -1,16 +1,15 @@
-import { supabaseDb } from "./supabaseDatabase";
+import { db } from "./database";
 import { PlayerStats, WonderStats, GameHistory } from "../types";
 import { WONDERS, getWonderByName } from "../data/wonders";
-import { Player, Game, GamePlayer } from "./supabaseClient";
 
 export class StatsService {
   async calculatePlayerStats(): Promise<PlayerStats[]> {
-    const players = await supabaseDb.getAllPlayers();
-    const games = await supabaseDb.getAllGames();
+    const players = db.getAllPlayers();
+    const games = db.getAllGames();
 
     return players.map((player) => {
       const playerGames = games.filter((game) =>
-        game.players.some((p) => p.player_id === player.id)
+        game.players.some((p) => p.playerId === player.id)
       );
 
       const totalGames = playerGames.length;
@@ -23,10 +22,10 @@ export class StatsService {
           (a, b) => b.score - a.score
         );
         const playerInGame = game.players.find(
-          (p) => p.player_id === player.id
+          (p) => p.playerId === player.id
         )!;
 
-        if (sortedPlayers[0].id === playerInGame.id) {
+        if (sortedPlayers[0].playerId === playerInGame.playerId) {
           wins++;
         }
         totalScore += playerInGame.score;
@@ -36,7 +35,7 @@ export class StatsService {
       const wonderStats = WONDERS.map((wonder) => {
         const wonderGames = playerGames.filter(
           (game) =>
-            game.players.find((p) => p.player_id === player.id)?.wonder_name ===
+            game.players.find((p) => p.playerId === player.id)?.wonderName ===
             wonder.name
         );
 
@@ -49,10 +48,10 @@ export class StatsService {
             (a, b) => b.score - a.score
           );
           const playerInGame = game.players.find(
-            (p) => p.player_id === player.id
+            (p) => p.playerId === player.id
           )!;
 
-          if (sortedPlayers[0].id === playerInGame.id) {
+          if (sortedPlayers[0].playerId === playerInGame.playerId) {
             wonderWins++;
           }
           wonderTotalScore += playerInGame.score;
@@ -83,11 +82,11 @@ export class StatsService {
   }
 
   async calculateWonderStats(): Promise<WonderStats[]> {
-    const games = await supabaseDb.getAllGames();
+    const games = db.getAllGames();
 
     return WONDERS.map((wonder) => {
       const wonderGames = games.filter((game) =>
-        game.players.some((p) => p.wonder_name === wonder.name)
+        game.players.some((p) => p.wonderName === wonder.name)
       );
 
       const totalGames = wonderGames.length;
@@ -99,10 +98,10 @@ export class StatsService {
           (a, b) => b.score - a.score
         );
         const wonderPlayer = game.players.find(
-          (p) => p.wonder_name === wonder.name
+          (p) => p.wonderName === wonder.name
         )!;
 
-        if (sortedPlayers[0].id === wonderPlayer.id) {
+        if (sortedPlayers[0].playerId === wonderPlayer.playerId) {
           wins++;
         }
         totalScore += wonderPlayer.score;
@@ -120,8 +119,8 @@ export class StatsService {
   }
 
   async getGameHistory(): Promise<GameHistory[]> {
-    const games = await supabaseDb.getAllGames();
-    const players = await supabaseDb.getAllPlayers();
+    const games = db.getAllGames();
+    const players = db.getAllPlayers();
 
     return games
       .map((game) => {
@@ -130,13 +129,13 @@ export class StatsService {
         );
 
         const gamePlayers = sortedPlayers.map((gamePlayer, index) => {
-          const player = players.find((p) => p.id === gamePlayer.player_id)!;
-          const wonder = getWonderByName(gamePlayer.wonder_name)!;
+          const player = players.find((p) => p.id === gamePlayer.playerId)!;
+          const wonder = getWonderByName(gamePlayer.wonderName)!;
 
           return {
-            playerId: gamePlayer.player_id,
+            playerId: gamePlayer.playerId,
             playerName: player.name,
-            wonderName: gamePlayer.wonder_name,
+            wonderName: gamePlayer.wonderName,
             wonderDisplayName: wonder.displayName,
             score: gamePlayer.score,
             position: index + 1,
@@ -145,11 +144,11 @@ export class StatsService {
 
         return {
           id: game.id,
-          createdAt: new Date(game.created_at),
+          createdAt: game.createdAt,
           players: gamePlayers,
         };
       })
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 }
 

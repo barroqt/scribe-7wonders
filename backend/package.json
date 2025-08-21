@@ -5,12 +5,12 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc",
     "start": "node dist/index.js",
     "lint": "eslint src --ext .ts",
     "test": "jest",
-    "build:frontend": "cd ../frontend && npm run build || cd ./frontend && npm run build",
-    "postbuild": "npm run build:frontend && mkdir -p dist/frontend && cp -r ../frontend/dist/* dist/frontend/ || cp -r ./frontend/dist/* dist/frontend/"
+    "build:frontend": "if [ -d \"../frontend\" ]; then cd ../frontend && npm install && npm run build; else echo \"Frontend directory not found, skipping frontend build\"; fi",
+    "postbuild": "npm run build:frontend && if [ -d \"../frontend/dist\" ]; then mkdir -p dist/frontend && cp -r ../frontend/dist/* dist/frontend/; else echo \"Frontend dist not found, skipping copy\"; fi"
   },
   "dependencies": {
     "@types/pg": "^8.15.5",
